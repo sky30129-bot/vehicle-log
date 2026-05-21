@@ -1,35 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 
 const STORAGE_KEY = "vehicle_log_records";
-const API_KEY = "여기에_Anthropic_API키_입력";
+const GEMINI_API_KEY = "AIzaSyDZOLYZe8_pcP9o3Dn6noimjUgxt2smDBQ";
 const views = { HOME: "home", CAMERA: "camera", FORM: "form", LIST: "list", SEND: "send" };
 
 async function analyzeImage(base64Image) {
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 256,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64Image } },
-            { type: "text", text: "이 이미지는 자동차 계기판입니다. 주행거리(오도미터/ODO) 숫자만 정확히 읽어서 숫자만 답하세요. 단위(km 등)는 제외하고 숫자만. 예: 12345. 읽을 수 없으면 '인식불가'라고만 답하세요." }
+        contents: [{
+          parts: [
+            { text: "이 이미지는 자동차 계기판입니다. 주행거리(오도미터) 숫자만 정확히 읽어서 숫자만 답하세요. 단위는 제외하고 숫자만. 예: 12345" },
+            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
           ]
         }]
       })
     });
     const data = await res.json();
-    const raw = data?.content?.[0]?.text?.trim() || "";
-    if (raw.includes("인식불가") || raw.includes("없")) return "";
-    return raw.replace(/[^0-9]/g, "");
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return text.replace(/[^0-9]/g, "");
   } catch { return ""; }
 }
 
