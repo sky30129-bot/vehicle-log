@@ -236,7 +236,6 @@ export default function App() {
     </div>
   );
 
-  // HOME
   const thisMonth = new Date().toISOString().slice(0, 7);
   const monthRecs = records.filter(r => r.date?.startsWith(thisMonth));
 
